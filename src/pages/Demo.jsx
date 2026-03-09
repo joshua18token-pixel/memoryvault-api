@@ -175,29 +175,41 @@ function ChatPanel({ title, hasMemory, sessionNum, memories, onNewMemory }) {
 
   const getResponse = useCallback((userMsg) => {
     const lower = userMsg.toLowerCase();
+    const askingAboutName = lower.includes('my name') || lower.includes("what's my name") || lower.includes('what is my name') || lower.includes('tell me my name');
+    const askingAboutMemory = lower.includes('remember') || lower.includes('know about me') || lower.includes('who am i') || lower.includes('what do you know');
+    const nameMem = memories.find(m => m.key === 'name');
 
-    // Session 2+: memory bot recalls, standard bot doesn't
-    if (sessionNum > 1 && !hasMemory) {
-      if (lower.includes('remember') || lower.includes('know about me') || lower.includes('my name') || lower.includes('who am i')) {
-        return "I'm sorry, I don't have any context about you. This seems like a new conversation to me. Could you tell me about yourself?";
-      }
-      return `I'd be happy to help with that, but I don't have any prior context about you. Every session starts fresh for me. What would you like to talk about?`;
+    // --- NO MEMORY BOT: always clueless in session 2+ ---
+    if (!hasMemory && sessionNum > 1) {
+      if (askingAboutName) return "I don't know your name — this is a fresh session for me. What's your name?";
+      if (askingAboutMemory) return "I'm sorry, I don't have any context about you. This seems like a new conversation to me. Could you tell me about yourself?";
+      return "I'd be happy to help, but I don't have any prior context about you. Every session starts fresh for me.";
     }
 
-    if (hasMemory && memories.length > 0) {
-      // Check if asking about memories
-      if (lower.includes('remember') || lower.includes('know about me') || lower.includes('who am i')) {
-        const memText = memories.map(m => m.text).join('. ');
-        return `Of course! Here's what I remember about you: ${memText}. What else would you like to know?`;
-      }
-      if (lower.includes('my name') || lower.includes('what is my name') || lower.includes("what's my name")) {
-        const nameMem = memories.find(m => m.key === 'name');
-        if (nameMem) return `Your name is ${nameMem.value}! 😊 How can I help you today?`;
-        return "I don't think you've told me your name yet. What is it?";
-      }
+    if (!hasMemory) {
+      if (askingAboutName) return "I don't know your name yet! What is it?";
     }
 
-    // Store new memories if this panel has memory enabled
+    // --- MEMORY BOT: specific queries first, then general ---
+
+    // Asking specifically about name? Check name memory specifically.
+    if (hasMemory && askingAboutName) {
+      if (nameMem) return `Your name is ${nameMem.value}! 😊 How can I help you today?`;
+      return "Hmm, I don't think you've told me your name yet. What is it?";
+    }
+
+    // Asking generally what we remember?
+    if (hasMemory && askingAboutMemory) {
+      if (memories.length > 0) {
+        const parts = [];
+        if (nameMem) parts.push(`Your name is ${nameMem.value}`);
+        memories.filter(m => m.key !== 'name').forEach(m => parts.push(m.text));
+        return `Of course! Here's what I remember: ${parts.join('. ')}. What else would you like to know?`;
+      }
+      return "I don't have any memories about you yet. Tell me something — your name, what you like, what you do!";
+    }
+
+    // --- STORING: extract facts from what user says ---
     if (hasMemory) {
       const facts = extractFacts(userMsg);
       facts.forEach(f => onNewMemory(f));
@@ -209,12 +221,14 @@ function ChatPanel({ title, hasMemory, sessionNum, memories, onNewMemory }) {
       }
     }
 
-    // Default responses
-    if (lower.includes('my name') || lower.includes("what's my name")) {
-      if (!hasMemory) return "I don't know your name yet! What is it?";
-      const nameMem = memories.find(m => m.key === 'name');
-      if (nameMem) return `Your name is ${nameMem.value}! 😊`;
-      return "I don't think you've told me yet — what's your name?";
+    // No memory bot, session 1 - just chat
+    if (!hasMemory) {
+      const facts = extractFacts(userMsg);
+      if (facts.length > 0) {
+        const nameF = facts.find(f => f.key === 'name');
+        if (nameF) return `Nice to meet you, ${nameF.value}! What else would you like to talk about?`;
+        return "Cool! What else is on your mind?";
+      }
     }
 
     return "That's interesting! Tell me more about yourself — the more I know, the better I can help in future sessions.";
