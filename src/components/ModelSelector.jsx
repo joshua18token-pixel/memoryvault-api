@@ -59,9 +59,11 @@ export default function ModelSelector({ selected, onChange, credits }) {
             zIndex: 10000, background: 'rgba(0,0,0,0.4)',
           }} onClick={() => setOpen(false)} />
 
-          {/* Dropdown — fully opaque, no bleed-through */}
+          {/* Dropdown — fixed position, rendered at viewport level to avoid stacking context issues */}
           <div style={{
-            position: 'absolute', top: '100%', left: 0, marginTop: 4,
+            position: 'fixed',
+            top: ref.current ? ref.current.getBoundingClientRect().bottom + 4 : 80,
+            left: ref.current ? ref.current.getBoundingClientRect().left : 100,
             background: '#1a1a24', border: '1px solid #2a2a3a',
             borderRadius: 12, padding: 8, minWidth: 340,
             zIndex: 10001, boxShadow: '0 16px 64px rgba(0,0,0,0.9)',
