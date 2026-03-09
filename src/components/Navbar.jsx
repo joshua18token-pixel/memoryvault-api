@@ -93,7 +93,8 @@ export default function Navbar() {
           >
             GitHub
           </a>
-          <a href="/docs" style={styles.cta}>Get API Key</a>
+          <Link to="/login" style={styles.link}>Sign In</Link>
+          <Link to="/signup" style={{ ...styles.cta, textDecoration: 'none' }}>Get Started</Link>
         </div>
       </div>
     </nav>
