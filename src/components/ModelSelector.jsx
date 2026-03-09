@@ -22,13 +22,13 @@ const s = {
     top: '100%',
     left: 0,
     marginTop: 4,
-    background: 'var(--bg-card)',
+    background: '#16161f',
     border: '1px solid var(--border)',
     borderRadius: 12,
     padding: 8,
     minWidth: 320,
-    zIndex: 50,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    zIndex: 9999,
+    boxShadow: '0 12px 48px rgba(0,0,0,0.8)',
   },
   option: (active) => ({
     display: 'flex',
@@ -75,7 +75,7 @@ export default function ModelSelector({ selected, onChange, credits }) {
       </button>
       {open && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setOpen(false)} />
           <div style={s.dropdown}>
             {MODELS.map(model => {
               const cost = costTier(model);

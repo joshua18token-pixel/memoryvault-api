@@ -10,17 +10,59 @@ const s = {
     alignItems: 'center',
     gap: 8,
   },
-  clearBtn: {
+  settingsBtn: {
     marginLeft: 'auto',
-    fontSize: 11,
-    color: 'var(--red)',
-    background: 'rgba(239,68,68,0.1)',
-    border: '1px solid rgba(239,68,68,0.2)',
-    borderRadius: 6,
-    padding: '3px 10px',
+    fontSize: 14,
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
-    fontWeight: 600,
+    padding: '2px 6px',
+    borderRadius: 4,
     fontFamily: 'var(--font)',
+    opacity: 0.5,
+    transition: 'opacity 0.15s',
+  },
+  settingsMenu: {
+    position: 'absolute',
+    top: '100%',
+    right: 8,
+    marginTop: 4,
+    background: '#16161f',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    padding: 4,
+    zIndex: 100,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+    minWidth: 180,
+  },
+  settingsItem: {
+    display: 'block',
+    width: '100%',
+    padding: '8px 12px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 6,
+    color: 'var(--text-muted)',
+    fontSize: 12,
+    cursor: 'pointer',
+    textAlign: 'left',
+    fontFamily: 'var(--font)',
+    transition: 'background 0.15s',
+  },
+  dangerItem: {
+    display: 'block',
+    width: '100%',
+    padding: '8px 12px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 6,
+    color: 'var(--red)',
+    fontSize: 12,
+    cursor: 'pointer',
+    textAlign: 'left',
+    fontFamily: 'var(--font)',
+    transition: 'background 0.15s',
   },
   count: { fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 },
   list: { flex: 1, overflowY: 'auto', padding: 8 },
@@ -186,6 +228,9 @@ function CategoryGroup({ name, icon, color, memories, onDeleteMemory, defaultOpe
 }
 
 export default function MemoryPanel({ memories, onDeleteMemory, onClearAll }) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+
   const grouped = useMemo(() => {
     const groups = {};
     for (const mem of memories) {
@@ -204,15 +249,58 @@ export default function MemoryPanel({ memories, onDeleteMemory, onClearAll }) {
 
   return (
     <>
-      <div style={s.header}>
+      <div style={{ ...s.header, position: 'relative' }}>
         <span>🧠</span> Memories
         <span style={s.count}>{memories.length}</span>
         {memories.length > 0 && onClearAll && (
-          <button style={s.clearBtn} onClick={() => {
-            if (confirm('Delete ALL memories? This cannot be undone.')) onClearAll();
-          }}>
-            Clear All
-          </button>
+          <>
+            <button
+              style={s.settingsBtn}
+              onClick={() => { setShowSettings(!showSettings); setConfirmClear(false); }}
+              onMouseEnter={e => e.target.style.opacity = '1'}
+              onMouseLeave={e => e.target.style.opacity = '0.5'}
+              title="Memory settings"
+            >
+              ⚙️
+            </button>
+            {showSettings && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => { setShowSettings(false); setConfirmClear(false); }} />
+                <div style={s.settingsMenu}>
+                  {!confirmClear ? (
+                    <button
+                      style={s.dangerItem}
+                      onClick={() => setConfirmClear(true)}
+                      onMouseEnter={e => e.target.style.background = 'rgba(239,68,68,0.1)'}
+                      onMouseLeave={e => e.target.style.background = 'transparent'}
+                    >
+                      🗑 Reset all memories...
+                    </button>
+                  ) : (
+                    <div style={{ padding: '8px 12px' }}>
+                      <div style={{ fontSize: 12, color: 'var(--red)', fontWeight: 600, marginBottom: 8 }}>
+                        ⚠️ This will permanently erase everything the AI knows about you.
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => { onClearAll(); setShowSettings(false); setConfirmClear(false); }}
+                          style={{ flex: 1, padding: '6px', background: 'var(--red)', color: 'white', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                        >
+                          Yes, erase all
+                        </button>
+                        <button
+                          onClick={() => { setShowSettings(false); setConfirmClear(false); }}
+                          style={{ flex: 1, padding: '6px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
       <div style={s.list}>
