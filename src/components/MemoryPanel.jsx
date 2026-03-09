@@ -147,14 +147,19 @@ const s = {
 
 // Category definitions with icons and color
 const CATEGORIES = {
-  'About Me': { icon: '👤', color: '#8b5cf6', match: ['personal', 'identity', 'name', 'age', 'location'] },
-  'Sports': { icon: '⚽', color: '#22c55e', match: ['sports', 'soccer', 'football', 'college football', 'basketball', 'baseball', 'mls', 'nfl', 'nba'] },
+  'About Me': { icon: '👤', color: '#8b5cf6', match: ['personal', 'identity', 'name', 'age', 'location', 'birthday', 'bio'] },
+  'Family': { icon: '👨‍👩‍👧', color: '#06b6d4', match: ['family', 'daughter', 'son', 'wife', 'husband', 'kids', 'children', 'parent', 'brother', 'sister', 'mom', 'dad', 'pet', 'dog', 'cat'] },
+  'Sports': { icon: '⚽', color: '#22c55e', match: ['sports', 'soccer', 'football', 'college football', 'basketball', 'baseball', 'mls', 'nfl', 'nba', 'team', 'player', 'coach', 'game', 'match', 'league', 'championship'] },
+  'Education': { icon: '🎓', color: '#eab308', match: ['education', 'school', 'university', 'college', 'class', 'course', 'study', 'studying', 'homework', 'exam', 'test', 'grade', 'degree', 'major', 'professor', 'teacher', 'student', 'learning', 'lecture', 'thesis', 'research', 'tutor', 'math', 'science', 'english', 'history'] },
+  'Work & Projects': { icon: '💼', color: '#3b82f6', match: ['work', 'project', 'building', 'career', 'job', 'business', 'startup', 'company', 'coding', 'app'] },
+  'Health & Wellness': { icon: '🏥', color: '#ef4444', match: ['health', 'medical', 'doctor', 'medicine', 'exercise', 'gym', 'diet', 'nutrition', 'sleep', 'mental health', 'therapy', 'allergy', 'condition'] },
+  'Finance': { icon: '💰', color: '#10b981', match: ['finance', 'money', 'budget', 'invest', 'savings', 'salary', 'expense', 'crypto', 'stocks', 'bank'] },
+  'Music': { icon: '🎵', color: '#ec4899', match: ['music', 'drums', 'guitar', 'instrument', 'band', 'song', 'album', 'concert', 'playlist'] },
+  'Food & Cooking': { icon: '🍽️', color: '#f97316', match: ['food', 'cooking', 'recipe', 'restaurant', 'meal', 'diet', 'favorite food', 'cuisine', 'coffee', 'drink'] },
+  'Travel': { icon: '✈️', color: '#0ea5e9', match: ['travel', 'trip', 'vacation', 'flight', 'hotel', 'destination', 'country', 'city', 'visit'] },
+  'Entertainment': { icon: '🎬', color: '#d97706', match: ['movies', 'tv', 'shows', 'documentaries', 'coaching', 'analysis', 'gaming', 'netflix', 'youtube', 'book', 'reading', 'podcast'] },
   'Interests': { icon: '💡', color: '#f97316', match: ['interest', 'hobbies', 'hobby', 'likes', 'preference'] },
-  'Work & Projects': { icon: '💼', color: '#3b82f6', match: ['work', 'project', 'building', 'career', 'job', 'business'] },
-  'Music': { icon: '🎵', color: '#ec4899', match: ['music', 'drums', 'guitar', 'instrument', 'band'] },
-  'Family': { icon: '👨‍👩‍👧', color: '#06b6d4', match: ['family', 'daughter', 'son', 'wife', 'husband', 'kids', 'children'] },
-  'Entertainment': { icon: '🎬', color: '#d97706', match: ['movies', 'tv', 'shows', 'documentaries', 'coaching', 'analysis', 'gaming'] },
-  'Knowledge': { icon: '📚', color: '#6366f1', match: ['players', 'facts', 'history', 'stats'] },
+  'Knowledge': { icon: '📚', color: '#6366f1', match: ['players', 'facts', 'history', 'stats', 'trivia', 'info'] },
 };
 
 function categorizeMemory(mem) {

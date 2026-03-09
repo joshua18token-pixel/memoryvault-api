@@ -37,8 +37,10 @@ const s = {
     padding: '10px 12px',
     borderRadius: 8,
     cursor: 'pointer',
-    background: active ? 'var(--primary-glow)' : 'transparent',
+    background: active ? 'rgba(139,92,246,0.15)' : '#16161f',
     transition: 'background 0.15s',
+    position: 'relative',
+    zIndex: 10000,
   }),
   optionIcon: { fontSize: 20, marginTop: 2 },
   optionName: { fontWeight: 600, fontSize: 14 },
@@ -75,8 +77,8 @@ export default function ModelSelector({ selected, onChange, credits }) {
       </button>
       {open && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setOpen(false)} />
-          <div style={s.dropdown}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'transparent' }} onClick={() => setOpen(false)} />
+          <div style={s.dropdown} onClick={e => e.stopPropagation()}>
             {MODELS.map(model => {
               const cost = costTier(model);
               return (
