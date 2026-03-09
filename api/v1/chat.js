@@ -165,6 +165,19 @@ If the user asks what you remember, share the relevant memories naturally.${memo
       }
     } catch { /* memory extraction is best-effort */ }
 
+    // 10. Fetch updated memories to return to frontend
+    let currentMemories = [];
+    try {
+      const { data: mems } = await supabase
+        .from('memories')
+        .select('id, content, type, importance, tags, created_at')
+        .eq('project_id', 'consumer')
+        .eq('namespace', namespace || `user_${user_id}`)
+        .order('importance', { ascending: false })
+        .limit(20);
+      currentMemories = mems || [];
+    } catch { /* best effort */ }
+
     res.json({
       response,
       message_id: messageId,
@@ -172,6 +185,7 @@ If the user asks what you remember, share the relevant memories naturally.${memo
       tokens: inputTokens + outputTokens,
       cost: parseFloat(cost.toFixed(6)),
       credits_remaining: parseFloat((profile.credits - cost).toFixed(4)),
+      memories: currentMemories,
     });
 
   } catch (err) {

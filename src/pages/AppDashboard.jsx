@@ -180,14 +180,12 @@ export default function AppDashboard() {
   async function loadMemories() {
     if (!user) return;
     try {
-      const res = await fetch('/api/v1/memories/recall', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': 'internal' },
-        body: JSON.stringify({
-          namespace: `user_${user.id}`,
-          query: 'everything about this user',
-          limit: 10,
-        }),
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch('/api/v1/user/memories', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
       const data = await res.json();
       setMemories(data.memories || []);
@@ -267,8 +265,10 @@ export default function AppDashboard() {
           loadSessions();
         }
 
+        // Update memories from response (includes newly extracted ones)
+        if (data.memories) setMemories(data.memories);
+
         refreshProfile(); // refresh credits
-        loadMemories(); // refresh memories
       }
     } catch (err) {
       setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: `Network error: ${err.message}`, created_at: new Date().toISOString() }]);
