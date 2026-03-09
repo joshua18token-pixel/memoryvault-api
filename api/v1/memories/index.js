@@ -19,6 +19,33 @@ module.exports = async (req, res) => {
 
       const embedding = await embed(content);
 
+      // Deduplication: check for similar existing memories
+      const { data: similar } = await supabase.rpc('recall_memories', {
+        query_embedding: embedding,
+        p_project_id: projectId,
+        p_namespace: namespace,
+        p_limit: 1,
+        p_min_importance: 0.0,
+      });
+
+      if (similar && similar.length > 0 && similar[0].similarity > 0.85) {
+        // Update existing instead of creating duplicate
+        const existing = similar[0];
+        const mergedTags = [...new Set([...(existing.tags || []), ...(tags || [])])];
+        const { data, error } = await supabase.from('memories')
+          .update({
+            content,
+            importance: Math.max(existing.importance || 0.5, importance || 0.5),
+            tags: mergedTags,
+            last_accessed_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select('id, content, type, importance, tags, created_at')
+          .single();
+        if (error) throw error;
+        return res.status(200).json({ memory: data, deduplicated: true });
+      }
+
       const { data, error } = await supabase.from('memories').insert({
         project_id: projectId,
         namespace,

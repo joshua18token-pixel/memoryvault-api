@@ -153,23 +153,51 @@ You are NOT a generic chatbot. You are THEIR assistant. Act like it.${memoryCont
       model: model || 'gpt-4o-mini',
     });
 
-    // 9. Auto-extract and store memories from the conversation
+    // 9. Auto-extract and store memories (with deduplication)
     try {
+      const ns = namespace || `user_${user_id}`;
       const convoSnippet = `User: ${message}\nAssistant: ${response}`;
       const extracted = await extractMemories(convoSnippet);
       if (Array.isArray(extracted) && extracted.length > 0) {
         for (const mem of extracted) {
           const memEmbed = await embed(mem.content);
-          await supabase.from('memories').insert({
-            project_id: 'consumer',
-            namespace: namespace || `user_${user_id}`,
-            content: mem.content,
-            embedding: memEmbed,
-            type: mem.type || 'semantic',
-            importance: mem.importance || 0.5,
-            tags: mem.tags || [],
-            metadata: { source: 'auto-chat', session_id },
+
+          // Check for duplicates: find similar existing memories
+          const { data: similar } = await supabase.rpc('recall_memories', {
+            query_embedding: memEmbed,
+            p_project_id: 'consumer',
+            p_namespace: ns,
+            p_limit: 1,
+            p_min_importance: 0.0,
           });
+
+          // If a very similar memory exists (>0.85 similarity), update it instead of creating a new one
+          if (similar && similar.length > 0 && similar[0].similarity > 0.85) {
+            const existing = similar[0];
+            // Keep the higher importance, merge tags
+            const mergedTags = [...new Set([...(existing.tags || []), ...(mem.tags || [])])];
+            const newImportance = Math.max(existing.importance || 0.5, mem.importance || 0.5);
+            await supabase.from('memories')
+              .update({
+                content: mem.content, // use the newer phrasing
+                importance: Math.min(newImportance + 0.05, 1.0), // slight boost for reinforcement
+                tags: mergedTags,
+                last_accessed_at: new Date().toISOString(),
+              })
+              .eq('id', existing.id);
+          } else {
+            // New unique memory — store it
+            await supabase.from('memories').insert({
+              project_id: 'consumer',
+              namespace: ns,
+              content: mem.content,
+              embedding: memEmbed,
+              type: mem.type || 'semantic',
+              importance: mem.importance || 0.5,
+              tags: mem.tags || [],
+              metadata: { source: 'auto-chat', session_id },
+            });
+          }
         }
       }
     } catch { /* memory extraction is best-effort */ }

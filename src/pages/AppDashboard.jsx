@@ -357,8 +357,14 @@ export default function AppDashboard() {
         <div style={{ padding: 12, borderTop: '1px solid var(--border)' }}>
           <CreditsBadge credits={profile?.credits || 0} />
           <button
+            onClick={() => navigate('/developer')}
+            style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, cursor: 'pointer' }}
+          >
+            🔧 Developer Dashboard
+          </button>
+          <button
             onClick={signOut}
-            style={{ width: '100%', marginTop: 8, padding: '8px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
+            style={{ width: '100%', marginTop: 4, padding: '8px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
           >
             Sign Out
           </button>

@@ -9,6 +9,7 @@ import Demo from './pages/Demo';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AppDashboard from './pages/AppDashboard';
+import Developer from './pages/Developer';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -38,6 +39,7 @@ function App() {
 
           {/* App dashboard (own layout) */}
           <Route path="/app" element={<AppDashboard />} />
+          <Route path="/developer" element={<PublicLayout><Developer /></PublicLayout>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

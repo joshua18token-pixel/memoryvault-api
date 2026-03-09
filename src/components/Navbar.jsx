@@ -85,6 +85,7 @@ export default function Navbar() {
           {navLink('/', 'Home')}
           {navLink('/demo', 'Live Demo')}
           {navLink('/docs', 'Docs')}
+          {navLink('/developer', 'Developers')}
           <a
             href="https://github.com"
             target="_blank"
