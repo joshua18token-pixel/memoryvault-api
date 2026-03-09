@@ -3,7 +3,7 @@ const { embed } = require('../../../lib/openai');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -57,6 +57,38 @@ module.exports = async (req, res) => {
 
       if (error) throw error;
       return res.json({ memories: data || [] });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // DELETE — delete a specific memory or all memories
+  if (req.method === 'DELETE') {
+    try {
+      const { id, all } = req.query;
+
+      if (all === 'true') {
+        const { error, count } = await supabase
+          .from('memories')
+          .delete({ count: 'exact' })
+          .eq('project_id', 'consumer')
+          .eq('namespace', namespace);
+        if (error) throw error;
+        return res.json({ deleted: true, count });
+      }
+
+      if (id) {
+        const { error } = await supabase
+          .from('memories')
+          .delete()
+          .eq('id', id)
+          .eq('project_id', 'consumer')
+          .eq('namespace', namespace);
+        if (error) throw error;
+        return res.json({ deleted: true });
+      }
+
+      return res.status(400).json({ error: 'Provide id or all=true' });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

@@ -177,6 +177,43 @@ export default function AppDashboard() {
     setMessages(data || []);
   }
 
+  async function deleteMemory(memoryId) {
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      await fetch(`/api/v1/user/memories?id=${memoryId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authSession.access_token}` },
+      });
+      setMemories(prev => prev.filter(m => m.id !== memoryId));
+    } catch (err) {
+      console.error('Failed to delete memory:', err);
+    }
+  }
+
+  async function clearAllMemories() {
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      await fetch('/api/v1/user/memories?all=true', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authSession.access_token}` },
+      });
+      setMemories([]);
+    } catch (err) {
+      console.error('Failed to clear memories:', err);
+    }
+  }
+
+  async function deleteSession(sessionId) {
+    const { error } = await supabase.from('chat_sessions').delete().eq('id', sessionId);
+    if (!error) {
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      if (activeSession?.id === sessionId) {
+        setActiveSession(null);
+        setMessages([]);
+      }
+    }
+  }
+
   async function loadMemories() {
     if (!user) return;
     try {
@@ -290,11 +327,25 @@ export default function AppDashboard() {
           {sessions.map(sess => (
             <div
               key={sess.id}
-              style={s.sessionItem(activeSession?.id === sess.id)}
+              style={{ ...s.sessionItem(activeSession?.id === sess.id), position: 'relative' }}
               onClick={() => setActiveSession(sess)}
+              onMouseEnter={e => { const btn = e.currentTarget.querySelector('.sess-del'); if (btn) btn.style.opacity = '1'; }}
+              onMouseLeave={e => { const btn = e.currentTarget.querySelector('.sess-del'); if (btn) btn.style.opacity = '0'; }}
             >
               <div style={s.sessionTitle}>{sess.title}</div>
               <div style={s.sessionMeta}>{getModel(sess.model).name} · {new Date(sess.created_at).toLocaleDateString()}</div>
+              <button
+                className="sess-del"
+                onClick={(e) => { e.stopPropagation(); if (confirm('Delete this chat?')) deleteSession(sess.id); }}
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  background: 'transparent', border: 'none', color: 'var(--red)',
+                  cursor: 'pointer', fontSize: 13, padding: '2px 6px', borderRadius: 4,
+                  opacity: 0, transition: 'opacity 0.15s', fontFamily: 'var(--font)',
+                }}
+              >
+                🗑
+              </button>
             </div>
           ))}
           {sessions.length === 0 && (
@@ -390,7 +441,7 @@ export default function AppDashboard() {
       {/* Right Panel: Memories */}
       {showMemories && activeSession && (
         <div style={s.rightPanel}>
-          <MemoryPanel memories={memories} />
+          <MemoryPanel memories={memories} onDeleteMemory={deleteMemory} onClearAll={clearAllMemories} />
         </div>
       )}
     </div>
