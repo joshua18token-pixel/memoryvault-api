@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MODELS, getModel } from '../lib/models';
 
 function costTier(model) {
@@ -10,34 +11,45 @@ function costTier(model) {
 
 export default function ModelSelector({ selected, onChange, credits }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
   const current = getModel(selected);
 
-  // Close on any click outside
+  // Calculate position when opening
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left });
+    }
+  }, [open]);
+
+  // Close on click outside
   useEffect(() => {
     if (!open) return;
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    // Use capture phase so it fires before anything else
-    document.addEventListener('mousedown', handleClick, true);
-    return () => document.removeEventListener('mousedown', handleClick, true);
+    const handler = () => setOpen(false);
+    // Delay to avoid closing immediately on the same click that opened it
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handler);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handler);
+    };
   }, [open]);
 
   // Close on Escape
   useEffect(() => {
     if (!open) return;
-    function handleKey(e) { if (e.key === 'Escape') setOpen(false); }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    const handler = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
   }, [open]);
 
   return (
-    <div ref={ref} style={{ position: 'relative', zIndex: 10000 }}>
+    <>
       <button
-        onClick={() => setOpen(!open)}
+        ref={btnRef}
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '6px 14px', background: 'var(--bg-card)',
@@ -51,23 +63,32 @@ export default function ModelSelector({ selected, onChange, credits }) {
         <span style={{ fontSize: 10, opacity: 0.5 }}>▼</span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <>
-          {/* Full-screen overlay to catch all clicks */}
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 10000, background: 'rgba(0,0,0,0.4)',
-          }} onClick={() => setOpen(false)} />
-
-          {/* Dropdown — fixed position, rendered at viewport level to avoid stacking context issues */}
-          <div style={{
-            position: 'fixed',
-            top: ref.current ? ref.current.getBoundingClientRect().bottom + 4 : 80,
-            left: ref.current ? ref.current.getBoundingClientRect().left : 100,
-            background: '#1a1a24', border: '1px solid #2a2a3a',
-            borderRadius: 12, padding: 8, minWidth: 340,
-            zIndex: 10001, boxShadow: '0 16px 64px rgba(0,0,0,0.9)',
-          }}>
+          {/* Overlay */}
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+              background: 'rgba(0,0,0,0.5)', zIndex: 99999,
+            }}
+          />
+          {/* Dropdown */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              background: '#18181f',
+              border: '1px solid #2a2a3a',
+              borderRadius: 12,
+              padding: 8,
+              minWidth: 340,
+              zIndex: 100000,
+              boxShadow: '0 16px 64px rgba(0,0,0,0.95)',
+            }}
+          >
             {MODELS.map(model => {
               const cost = costTier(model);
               const isActive = selected === model.id;
@@ -78,15 +99,15 @@ export default function ModelSelector({ selected, onChange, credits }) {
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 12,
                     padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: isActive ? 'rgba(139,92,246,0.15)' : '#1a1a24',
+                    background: isActive ? 'rgba(139,92,246,0.15)' : '#18181f',
                     marginBottom: 2,
                   }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#222230'; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '#1a1a24'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(139,92,246,0.15)' : '#18181f'; }}
                 >
                   <div style={{ fontSize: 20, marginTop: 2 }}>{model.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#e4e4e7' }}>
                       {model.name}
                       <span style={{ fontWeight: 400, fontSize: 12, color: '#71717a', marginLeft: 8 }}>
                         {model.provider}
@@ -111,8 +132,9 @@ export default function ModelSelector({ selected, onChange, credits }) {
               Credits remaining: <strong style={{ color: '#22c55e' }}>${credits?.toFixed(2) || '0.00'}</strong>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
